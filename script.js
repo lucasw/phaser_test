@@ -1,16 +1,17 @@
 var config = {
   type: Phaser.AUTO,
-  width: 800,
+  width: 900,
   height: 600,
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 200 }
+      gravity: { y: 0 }
     }
   },
   scene: {
     preload: preload,
-    create: create
+    create: create,
+    update: update
   }
 };
 
@@ -27,6 +28,12 @@ function preload()
   // Phaser.Canvas.setSmoothingEnabled(ctx, false);
 }
 
+var scale_max = 2.0
+var logo_scale = 0.05
+var scenery = []
+var scenery_dist = []
+var vel = 2.4
+
 function create()
 {
   this.add.image(400, 300, 'sky');
@@ -39,16 +46,30 @@ function create()
     blendMode: 'ADD'
   });
 
-  var logo = this.physics.add.image(400, 100, 'logo');
+  scenery.push(this.physics.add.image(400, 100, 'logo'));
+  scenery_dist.push(100);
+  emitter.startFollow(scenery[0])
+  scenery.push(this.physics.add.image(400, 100, 'logo'));
+  scenery_dist.push(120);
+  scenery.push(this.physics.add.image(400, 100, 'logo'));
+  scenery_dist.push(140);
 
-  logo.setVelocity(100, 200);
-  logo.setBounce(1, 1);
-  logo.setCollideWorldBounds(true);
+  // logo.setVelocity(100, 200);
+  // logo.setBounce(1, 1);
+  // logo.setCollideWorldBounds(false);
 
-  emitter.startFollow(logo);
+  // emitter.startFollow(logo);
 }
 
 function update()
 {
-
+  for (i = 0; i < scenery.length; i++) {
+    dist = scenery_dist[i];
+    scale = 15.0 / dist;
+    scenery[i].setScale(scale);
+    scenery_dist[i] -= vel;
+    if (scenery_dist[i] < 0) {
+      scenery_dist[i] = 200
+    }
+  }
 }
