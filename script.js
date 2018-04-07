@@ -16,7 +16,7 @@ var config = {
 
 var game = new Phaser.Game(config);
 
-function preload ()
+function preload()
 {
   this.load.setBaseURL('http://labs.phaser.io');
 
@@ -27,7 +27,7 @@ function preload ()
   // Phaser.Canvas.setSmoothingEnabled(ctx, false);
 }
 
-function create ()
+function create()
 {
   this.add.image(400, 300, 'sky');
 
@@ -48,3 +48,7 @@ function create ()
   emitter.startFollow(logo);
 }
 
+function update()
+{
+
+}
