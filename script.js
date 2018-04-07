@@ -28,31 +28,41 @@ function preload()
   // Phaser.Canvas.setSmoothingEnabled(ctx, false);
 }
 
-var scale_max = 2.0
-var logo_scale = 0.05
+var scale_max = 2.0;
+class Thing {
+  constructor(x, y, z, image) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.image = image;
+  }
+}
+
 var scenery = []
-var scenery_dist = []
-var vel = 2.4
+var vel = 2.4;
+var focal_length = 15.0;
+var focal_cx = 0.0;
+var focal_cy = 0.0;
 
 function create()
 {
   this.add.image(400, 300, 'sky');
 
+  focal_cx = config.width * 5.5 / 16.0;
+  focal_cy = config.height * 0.75 + 14;
+  /*
   var particles = this.add.particles('red');
-
   var emitter = particles.createEmitter({
     speed: 100,
     scale: { start: 1, end: 0 },
     blendMode: 'ADD'
   });
+  */
 
-  scenery.push(this.physics.add.image(400, 100, 'logo'));
-  scenery_dist.push(100);
-  emitter.startFollow(scenery[0])
-  scenery.push(this.physics.add.image(400, 100, 'logo'));
-  scenery_dist.push(120);
-  scenery.push(this.physics.add.image(400, 100, 'logo'));
-  scenery_dist.push(140);
+  scenery.push(new Thing(250, 100, 150, this.physics.add.image(400, 100, 'logo')));
+  scenery.push(new Thing(0, 100, 140, this.physics.add.image(400, 100, 'logo')));
+  scenery.push(new Thing(-500, 100, 110, this.physics.add.image(400, 100, 'logo')));
+  scenery.push(new Thing(500, 100, 100, this.physics.add.image(400, 100, 'logo')));
 
   // logo.setVelocity(100, 200);
   // logo.setBounce(1, 1);
@@ -64,12 +74,18 @@ function create()
 function update()
 {
   for (i = 0; i < scenery.length; i++) {
-    dist = scenery_dist[i];
-    scale = 15.0 / dist;
-    scenery[i].setScale(scale);
-    scenery_dist[i] -= vel;
-    if (scenery_dist[i] < 0) {
-      scenery_dist[i] = 200
+    var scale = focal_length / scenery[i].z;
+    var x = scale * scenery[i].x + focal_cx;
+    scenery[i].image.x = x
+    var y = scale * scenery[i].y + focal_cy;
+    scenery[i].image.y = y
+    scenery[i].image.setScale(scale);
+
+    scenery[i].z -= vel;
+    // TODO(lucasw) need to manage ordering of scenery so further stuff
+    // is behind nearer stuff.
+    if (scenery[i].z < 0) {
+      scenery[i].z = 200
     }
   }
 }
