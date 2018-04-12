@@ -2,12 +2,14 @@ var config = {
   type: Phaser.AUTO,
   width: 900,
   height: 600,
+  /*
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 }
     }
   },
+  */
   scene: {
     preload: preload,
     create: create,
@@ -19,27 +21,32 @@ var game = new Phaser.Game(config);
 
 function preload()
 {
-  this.load.setBaseURL('http://labs.phaser.io');
+  // this.load.setBaseURL('http://lucasw.github.io');
+  this.load.setBaseURL('http://localhost:8888');
 
-  this.load.image('sky', 'assets/skies/space3.png');
-  this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-  this.load.image('red', 'assets/particles/red.png');
+  this.load.image('sky', 'assets/space1.png');
+  this.load.image('logo', 'assets/phaser3-logo.png');
+  this.load.image('red', 'assets/red.png');
 
   // Phaser.Canvas.setSmoothingEnabled(ctx, false);
 }
 
 var scale_max = 2.0;
 class Thing {
-  constructor(x, y, z, image) {
+  constructor(x, y, z, sprite) {
     this.x = x;
     this.y = y;
     this.z = z;
-    this.image = image;
+    this.vx = 0;
+    this.vy = 0;
+    this.vz = 0;
+    this.sprite = sprite;
   }
 }
 
 var scenery = []
-var vel = 2.4;
+var acc_amount = 0.2;
+var player;
 var focal_length = 15.0;
 var focal_cx = 0.0;
 var focal_cy = 0.0;
@@ -59,33 +66,71 @@ function create()
   });
   */
 
-  scenery.push(new Thing(250, 100, 150, this.physics.add.image(400, 100, 'logo')));
-  scenery.push(new Thing(0, 100, 140, this.physics.add.image(400, 100, 'logo')));
-  scenery.push(new Thing(-500, 100, 110, this.physics.add.image(400, 100, 'logo')));
-  scenery.push(new Thing(500, 100, 100, this.physics.add.image(400, 100, 'logo')));
+  player = new Thing(0, 0, 0, this.add.sprite(400, 100, 'logo'));
+  player.vz = 1.4;
+  for (i = 0; i < 20; i++) {
+    scenery.push(new Thing(i * 50, 100, 250 + 50 * i, this.add.sprite(400, 100, 'logo')));
+  }
 
   // logo.setVelocity(100, 200);
   // logo.setBounce(1, 1);
   // logo.setCollideWorldBounds(false);
 
   // emitter.startFollow(logo);
+  window.onkeydown = function(e)
+  {
+    // console.log(e.keyCode);
+    if (e.keyCode == '87')  // 'w'
+    {
+      player.vy -= acc_amount;
+    }
+    if (e.keyCode == '83')  // 's'
+    {
+      player.vy += acc_amount;
+    }
+    if (e.keyCode == '65')  // 'a'
+    {
+      player.vx -= acc_amount;
+    }
+    if (e.keyCode == '68')  // 'd'
+    {
+      player.vx += acc_amount;
+    }
+  };
+  window.onkeyup = function(e)
+  {
+    console.log(e.keyCode);
+  };
 }
 
 function update()
 {
   for (i = 0; i < scenery.length; i++) {
-    var scale = focal_length / scenery[i].z;
-    var x = scale * scenery[i].x + focal_cx;
-    scenery[i].image.x = x
-    var y = scale * scenery[i].y + focal_cy;
-    scenery[i].image.y = y
-    scenery[i].image.setScale(scale);
+    var rz = scenery[i].z - player.z;
+    if (rz < 0) {
+      scenery[i].sprite.visible = false;
+      continue;
+    }
+    scenery[i].sprite.visible = true;
+    var rx = scenery[i].x - player.x;
+    var ry = scenery[i].y - player.y;
+    scenery[i].sprite.setDepth(1000 - rz);
+    var scale = focal_length / rz;
+    scenery[i].sprite.setScale(scale);
+    var x = scale * rx + focal_cx;
+    scenery[i].sprite.x = x
+    var y = scale * ry + focal_cy;
+    scenery[i].sprite.y = y
 
-    scenery[i].z -= vel;
     // TODO(lucasw) need to manage ordering of scenery so further stuff
     // is behind nearer stuff.
-    if (scenery[i].z < 0) {
-      scenery[i].z = 200
-    }
   }
+  player.x += player.vx;
+  player.y += player.vy;
+  player.z += player.vz;
+  player.vx *= 0.95;
+  player.vy *= 0.95;
+
+  if (player.z > 2000)
+    player.z = 0
 }
