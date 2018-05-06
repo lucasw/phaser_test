@@ -2,6 +2,7 @@ var config = {
   type: Phaser.AUTO,
   width: 900,
   height: 600,
+  pixelArt: true,
   /*
   physics: {
     default: 'arcade',
@@ -27,6 +28,7 @@ function preload()
   this.load.setBaseURL('http://localhost:8888');
 
   // Phaser.Canvas.setSmoothingEnabled(ctx, false);
+  this.load.image('grass', 'assets/grass.png');
 }
 
 class Thing {
@@ -43,6 +45,7 @@ class Thing {
 
 var cosa = Math.cos(60.0 / 180.0 * Math.PI);
 var sina = Math.sin(60.0 / 180.0 * Math.PI);
+var redraw_map = true;
 
 // draw hexagon
 function makeHex(x, y, wd, do_full=true)
@@ -74,13 +77,16 @@ function makeHex(x, y, wd, do_full=true)
 
 class MapCell
 {
-  constructor(x, y, z, edge_length)
+  constructor(x, y, z, edge_length, sprite)
   {
     this.x = x;
     this.y = y;
     this.z = z;
     this.edge_length = edge_length;
     this.path = makeHex(x, y, edge_length, true);
+    this.sprite = sprite;
+    this.sprite.z = z;
+    // this.sprite.smoothed = false;
   }
 
   draw(graphics)
@@ -93,25 +99,33 @@ function create()
 {
   graphics = this.add.graphics();
 
-  var x = 60;
-  var y = 60;
+  var xs = 60;
+  var ys = 60;
   var wd = 32;
   hex_wd = wd * 2.0 * (1.0 + cosa);
   hex_wd_b = wd * (1.0 + cosa);
   hex_ht = wd * (2.0 * sina);
 
-  num_hex = 8;
+  num_hex = 4;
   lim_xi = Math.ceil(num_hex * 0.6);
   for (xi = 0; xi < lim_xi; xi++)
   {
     for (yi = 0; yi < num_hex; yi++)
     {
-      map_cells.push(new MapCell(x + xi * hex_wd,
-                                 y + yi * hex_ht,
-                                 0, wd));
-      map_cells.push(new MapCell(x + hex_wd_b + xi * hex_wd,
-                                 y + wd * sina + yi * hex_ht,
-                                 0, wd));
+      x = xs + xi * hex_wd;
+      y = ys + yi * hex_ht;
+      grass1 = this.add.sprite(x, y, 'grass');
+      // grass1.setScale(hex_wd / grass1.width);
+      grass1.smoothed = false;
+      grass1.setScale(4.0);
+      map_cells.push(new MapCell(x, y, -y * 0.1, wd, grass1));
+
+      x = xs + hex_wd_b + xi * hex_wd;
+      y = ys + wd * sina + yi * hex_ht;
+      grass2 = this.add.sprite(x, y, 'grass');
+      grass2.setScale(hex_wd / grass1.width);
+      // grass2.displayWidth = hex_wd;
+      map_cells.push(new MapCell(x, y, -y * 0.1, wd, grass2));
     }
   }
 
@@ -146,8 +160,12 @@ function update()
 {
   graphics.clear();
   graphics.lineStyle(2, 0x0a41aa, 1);
-  for (var i = 0; i < map_cells.length; i++)
+  if (redraw_map)
   {
-    map_cells[i].draw(graphics);
+    for (var i = 0; i < map_cells.length; i++)
+    {
+      map_cells[i].draw(graphics);
+    }
+    redraw_map = false;
   }
 }
